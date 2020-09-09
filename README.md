@@ -12,7 +12,7 @@ $ ./raft-grpc-example --raft_id=nodeB --address=localhost:50052 --raft_data_dir 
 $ ./raft-grpc-example --raft_id=nodeC --address=localhost:50053 --raft_data_dir /tmp/my-raft-cluster
 $ go get github.com/Jille/raftadmin
 $ raftadmin localhost:50051 add_voter nodeB localhost:50052 0
-$ raftadmin localhost:50051 add_voter nodeC localhost:50053 0
+$ raftadmin --leader multi:///localhost:50051,localhost:50052 add_voter nodeC localhost:50053 0
 ```
 
 You start up three nodes, and bootstrap one of them. Then you tell the bootstrapped node where to find peers. Those peers sync up to the state of the bootstrapped node and become members of the cluster. Once your cluster is running, you never need to pass `--raft_bootstrap` again.

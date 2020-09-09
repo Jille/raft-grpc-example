@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	pb "github.com/Jille/raft-grpc-example/proto"
+	"github.com/Jille/raft-grpc-leader-rpc/leaderhealth"
 	transport "github.com/Jille/raft-grpc-transport"
 	"github.com/Jille/raftadmin"
 	"github.com/hashicorp/raft"
@@ -55,6 +56,7 @@ func main() {
 		raft:        r,
 	})
 	tm.Register(s)
+	leaderhealth.Setup(r, s, []string{"Example"})
 	raftadmin.Register(s, r)
 	reflection.Register(s)
 	if err := s.Serve(sock); err != nil {
