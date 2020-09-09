@@ -13,6 +13,9 @@ $ ./raft-grpc-example --raft_id=nodeC --address=localhost:50053 --raft_data_dir 
 $ go get github.com/Jille/raftadmin
 $ raftadmin localhost:50051 add_voter nodeB localhost:50052 0
 $ raftadmin --leader multi:///localhost:50051,localhost:50052 add_voter nodeC localhost:50053 0
+$ go run cmd/hammer/hammer.go &
+$ raftadmin --leader multi:///localhost:50051,localhost:50052,localhost:50053 leadership_transfer
+$ wait
 ```
 
 You start up three nodes, and bootstrap one of them. Then you tell the bootstrapped node where to find peers. Those peers sync up to the state of the bootstrapped node and become members of the cluster. Once your cluster is running, you never need to pass `--raft_bootstrap` again.
@@ -22,6 +25,8 @@ You start up three nodes, and bootstrap one of them. Then you tell the bootstrap
 This example uses [Jille/raft-grpc-transport](https://github.com/Jille/raft-grpc-transport) to communicate between nodes using gRPC.
 
 This example uses [Jille/raft-grpc-leader-rpc](https://github.com/Jille/raft-grpc-leader-rpc) to send RPCs to the leader.
+
+Hammer is a client that connects to your raft cluster and sends a bunch of requests. Trigger some leadership failovers to show that it's unaffected.
 
 ## What's what
 
