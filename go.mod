@@ -3,7 +3,7 @@ module github.com/Jille/raft-grpc-example
 go 1.13
 
 require (
-	github.com/Jille/raft-grpc-leader-rpc v1.0.0
+	github.com/Jille/raft-grpc-leader-rpc v1.1.0
 	github.com/Jille/raft-grpc-transport v1.1.0
 	github.com/Jille/raftadmin v1.1.1
 	github.com/golang/protobuf v1.4.2
