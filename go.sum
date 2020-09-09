@@ -1,6 +1,8 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/DataDog/datadog-go v2.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
+github.com/Jille/raft-grpc-leader-rpc v1.0.0 h1:iZZb7EYV/2+HGWpfo5hF6n91HAxndNNNx/TLy1liLzI=
+github.com/Jille/raft-grpc-leader-rpc v1.0.0/go.mod h1:l+pK+uPuqpFDFcPmyUPSng4257UXrST0Vc3Lo4XwVB0=
 github.com/Jille/raft-grpc-transport v1.0.0 h1:eJSxYnNE203A9WYMTLtMdCR0h/GT+aj4buassZO5fT0=
 github.com/Jille/raft-grpc-transport v1.0.0/go.mod h1:/utjkfBnPBc8/6vfJKJW/rGbjJps8/g05YbhppZr/eo=
 github.com/Jille/raft-grpc-transport v1.1.0 h1:ySDO1HCZPsbuCBcrWiVzwlQkPsKssX5j6XZ2sAj7sac=
