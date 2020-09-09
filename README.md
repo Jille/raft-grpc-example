@@ -21,6 +21,8 @@ You start up three nodes, and bootstrap one of them. Then you tell the bootstrap
 
 This example uses [Jille/raft-grpc-transport](https://github.com/Jille/raft-grpc-transport) to communicate between nodes using gRPC.
 
+This example uses [Jille/raft-grpc-leader-rpc](https://github.com/Jille/raft-grpc-leader-rpc) to send RPCs to the leader.
+
 ## What's what
 
 Raft uses logs to synchronize changes. Every change submitted to a Raft cluster is a log entry, which gets stored and replicated to the followers in the cluster. In this example, we use [raft-boltdb](https://github.com/hashicorp/raft-boltdb) to store these logs.
