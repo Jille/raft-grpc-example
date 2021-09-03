@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
+	"sync"
 	"time"
 
 	pb "github.com/Jille/raft-grpc-example/proto"
@@ -15,6 +16,7 @@ import (
 
 // wordTracker keeps track of the three longest words it ever saw.
 type wordTracker struct {
+	mtx   sync.RWMutex
 	words [3]string
 }
 
@@ -35,6 +37,8 @@ func cloneWords(words [3]string) []string {
 }
 
 func (f *wordTracker) Apply(l *raft.Log) interface{} {
+	f.mtx.Lock()
+	defer f.mtx.Unlock()
 	w := string(l.Data)
 	for i := 0; i < len(f.words); i++ {
 		if compareWords(w, f.words[i]) {
@@ -93,7 +97,8 @@ func (r rpcInterface) AddWord(ctx context.Context, req *pb.AddWordRequest) (*pb.
 }
 
 func (r rpcInterface) GetWords(ctx context.Context, req *pb.GetWordsRequest) (*pb.GetWordsResponse, error) {
-	// TODO: These two should be read under a mutex to handle concurrent Apply() calls.
+	r.wordTracker.mtx.RLock()
+	defer r.wordTracker.mtx.RUnlock()
 	return &pb.GetWordsResponse{
 		BestWords:   cloneWords(r.wordTracker.words),
 		ReadAtIndex: r.raft.AppliedIndex(),
