@@ -7,7 +7,7 @@ This is some example code for how to use [Hashicorp's Raft implementation](https
 ```shell
 $ mkdir /tmp/my-raft-cluster
 $ mkdir /tmp/my-raft-cluster/node{A,B,C}
-$ ./raft-grpc-example --raft_id=nodeA --address=localhost:50051 --raft_data_dir /tmp/my-raft-cluster --raft_bootstrap
+$ ./raft-grpc-example --raft_bootstrap --raft_id=nodeA --address=localhost:50051 --raft_data_dir /tmp/my-raft-cluster
 $ ./raft-grpc-example --raft_id=nodeB --address=localhost:50052 --raft_data_dir /tmp/my-raft-cluster
 $ ./raft-grpc-example --raft_id=nodeC --address=localhost:50053 --raft_data_dir /tmp/my-raft-cluster
 $ go get github.com/Jille/raftadmin
