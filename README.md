@@ -10,7 +10,7 @@ $ mkdir /tmp/my-raft-cluster/node{A,B,C}
 $ ./raft-grpc-example --raft_bootstrap --raft_id=nodeA --address=localhost:50051 --raft_data_dir /tmp/my-raft-cluster
 $ ./raft-grpc-example --raft_id=nodeB --address=localhost:50052 --raft_data_dir /tmp/my-raft-cluster
 $ ./raft-grpc-example --raft_id=nodeC --address=localhost:50053 --raft_data_dir /tmp/my-raft-cluster
-$ go get github.com/Jille/raftadmin
+$ go install github.com/Jille/raftadmin/cmd/raftadmin@latest
 $ raftadmin localhost:50051 add_voter nodeB localhost:50052 0
 $ raftadmin --leader multi:///localhost:50051,localhost:50052 add_voter nodeC localhost:50053 0
 $ go run cmd/hammer/hammer.go &
