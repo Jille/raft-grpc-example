@@ -8,8 +8,8 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
-	pb "github.com/Jille/raft-grpc-example/proto"
 	"github.com/Jille/raft-grpc-leader-rpc/leaderhealth"
 	transport "github.com/Jille/raft-grpc-transport"
 	"github.com/Jille/raftadmin"
@@ -17,6 +17,8 @@ import (
 	boltdb "github.com/hashicorp/raft-boltdb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	pb "github.com/Jille/raft-grpc-example/proto"
 )
 
 var (
@@ -25,6 +27,9 @@ var (
 
 	raftDir       = flag.String("raft_data_dir", "data/", "Raft data dir")
 	raftBootstrap = flag.Bool("raft_bootstrap", false, "Whether to bootstrap the Raft cluster")
+
+	enableMultiGroup = flag.Bool("multi_group", false, "Enable multi-group Raft support")
+	groupIds         = flag.String("group_ids", "", "Comma-separated list of group IDs to create")
 )
 
 func main() {
@@ -44,20 +49,52 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	wt := &wordTracker{}
-
-	r, tm, err := NewRaft(ctx, *raftId, *myAddr, wt)
-	if err != nil {
-		log.Fatalf("failed to start raft: %v", err)
-	}
 	s := grpc.NewServer()
-	pb.RegisterExampleServer(s, &rpcInterface{
-		wordTracker: wt,
-		raft:        r,
-	})
-	tm.Register(s)
-	leaderhealth.Setup(r, s, []string{"Example"})
-	raftadmin.Register(s, r)
+
+	if *enableMultiGroup {
+		groupManager := NewGroupManager()
+
+		var groups []string
+		if *groupIds != "" {
+			groups = strings.Split(*groupIds, ",")
+		} else {
+			groups = []string{"default"}
+		}
+
+		for _, groupID := range groups {
+			_, err := groupManager.CreateGroup(ctx, groupID, *raftId, *myAddr, *raftBootstrap)
+			if err != nil {
+				log.Fatalf("failed to create Raft group %s: %v", groupID, err)
+			}
+		}
+
+		pb.RegisterExampleServer(s, &rpcInterface{
+			groupMgr: groupManager,
+		})
+
+		groupManager.RegisterWithGRPC(s)
+
+		for _, groupID := range groups {
+			group, _ := groupManager.GetGroup(groupID)
+			raftadmin.Register(s, group.Raft)
+		}
+	} else {
+		wt := &wordTracker{}
+		r, tm, err := NewRaft(ctx, *raftId, *myAddr, wt)
+		if err != nil {
+			log.Fatalf("failed to start raft: %v", err)
+		}
+
+		pb.RegisterExampleServer(s, &rpcInterface{
+			wordTracker: wt,
+			raft:        r,
+		})
+
+		tm.Register(s)
+		leaderhealth.Setup(r, s, []string{"Example"})
+		raftadmin.Register(s, r)
+	}
+
 	reflection.Register(s)
 	if err := s.Serve(sock); err != nil {
 		log.Fatalf("failed to serve: %v", err)

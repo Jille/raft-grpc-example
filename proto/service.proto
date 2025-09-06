@@ -9,6 +9,7 @@ service Example {
 
 message AddWordRequest {
 	string word = 1;
+	string group_id = 2;
 }
 
 message AddWordResponse {
@@ -16,6 +17,7 @@ message AddWordResponse {
 }
 
 message GetWordsRequest {
+	string group_id = 1;
 }
 
 message GetWordsResponse {

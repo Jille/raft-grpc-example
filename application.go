@@ -9,9 +9,12 @@ import (
 	"sync"
 	"time"
 
-	pb "github.com/Jille/raft-grpc-example/proto"
 	"github.com/Jille/raft-grpc-leader-rpc/rafterrors"
 	"github.com/hashicorp/raft"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	pb "github.com/Jille/raft-grpc-example/proto"
 )
 
 // wordTracker keeps track of the three longest words it ever saw.
@@ -82,12 +85,34 @@ func (s *snapshot) Release() {
 }
 
 type rpcInterface struct {
+	pb.UnimplementedExampleServer
 	wordTracker *wordTracker
 	raft        *raft.Raft
+	groupMgr    *GroupManager
 }
 
 func (r rpcInterface) AddWord(ctx context.Context, req *pb.AddWordRequest) (*pb.AddWordResponse, error) {
-	f := r.raft.Apply([]byte(req.GetWord()), time.Second)
+	var instance *GroupInstance
+	var err error
+
+	if req.GetGroupId() != "" {
+		instance, err = r.groupMgr.GetGroup(req.GetGroupId())
+		if err != nil {
+			return nil, status.Errorf(codes.NotFound, "group not found: %v", err)
+		}
+	} else if r.raft != nil {
+		f := r.raft.Apply([]byte(req.GetWord()), time.Second)
+		if err := f.Error(); err != nil {
+			return nil, rafterrors.MarkRetriable(err)
+		}
+		return &pb.AddWordResponse{
+			CommitIndex: f.Index(),
+		}, nil
+	} else {
+		return nil, status.Error(codes.InvalidArgument, "group_id is required")
+	}
+
+	f := instance.Raft.Apply([]byte(req.GetWord()), time.Second)
 	if err := f.Error(); err != nil {
 		return nil, rafterrors.MarkRetriable(err)
 	}
@@ -97,10 +122,29 @@ func (r rpcInterface) AddWord(ctx context.Context, req *pb.AddWordRequest) (*pb.
 }
 
 func (r rpcInterface) GetWords(ctx context.Context, req *pb.GetWordsRequest) (*pb.GetWordsResponse, error) {
-	r.wordTracker.mtx.RLock()
-	defer r.wordTracker.mtx.RUnlock()
+	var instance *GroupInstance
+	var err error
+
+	if req.GetGroupId() != "" {
+		instance, err = r.groupMgr.GetGroup(req.GetGroupId())
+		if err != nil {
+			return nil, status.Errorf(codes.NotFound, "group not found: %v", err)
+		}
+	} else if r.wordTracker != nil && r.raft != nil {
+		r.wordTracker.mtx.RLock()
+		defer r.wordTracker.mtx.RUnlock()
+		return &pb.GetWordsResponse{
+			BestWords:   cloneWords(r.wordTracker.words),
+			ReadAtIndex: r.raft.AppliedIndex(),
+		}, nil
+	} else {
+		return nil, status.Error(codes.InvalidArgument, "group_id is required")
+	}
+
+	instance.WordTracker.mtx.RLock()
+	defer instance.WordTracker.mtx.RUnlock()
 	return &pb.GetWordsResponse{
-		BestWords:   cloneWords(r.wordTracker.words),
-		ReadAtIndex: r.raft.AppliedIndex(),
+		BestWords:   cloneWords(instance.WordTracker.words),
+		ReadAtIndex: instance.Raft.AppliedIndex(),
 	}, nil
 }
